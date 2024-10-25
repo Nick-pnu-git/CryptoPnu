@@ -1,0 +1,65 @@
+import random
+
+def create_alphabet():
+    # Створюємо алфавіт української мови + пробіл
+    return "абвгґдеєжзийклмнопрстуфхцчшщьюя АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ"
+
+def generate_random_key(length):
+    # Генеруємо випадковий ключ з цифр від 0 до 9
+    return ''.join(str(random.randint(0, 9)) for _ in range(length))
+
+def encrypt_gronsfeld(message, key):
+    alphabet = create_alphabet()
+    encrypted_message = []
+
+    key_length = len(key)
+    key_indices = [int(digit) for digit in key]  # Перетворюємо ключ на індекси
+
+    for i, char in enumerate(message):
+        if char in alphabet:
+            char_index = alphabet.index(char)
+            shift = key_indices[i % key_length]
+            new_index = (char_index + shift) % len(alphabet)
+            encrypted_message.append(alphabet[new_index])
+        else:
+            # Якщо символ не в алфавіті, додаємо його без змін
+            encrypted_message.append(char)
+
+    return ''.join(encrypted_message)
+
+def decrypt_gronsfeld(encrypted_message, key):
+    alphabet = create_alphabet()
+    decrypted_message = []
+
+    key_length = len(key)
+    key_indices = [int(digit) for digit in key]  # Перетворюємо ключ на індекси
+
+    for i, char in enumerate(encrypted_message):
+        if char in alphabet:
+            char_index = alphabet.index(char)
+            shift = key_indices[i % key_length]
+            new_index = (char_index - shift) % len(alphabet)
+            decrypted_message.append(alphabet[new_index])
+        else:
+            # Якщо символ не в алфавіті, додаємо його без змін
+            decrypted_message.append(char)
+
+    return ''.join(decrypted_message)
+
+# Застосування
+message = "Попрощалось ясне сонце з чорною землею"
+
+# Генерація випадкового ключа, довжина ключа менша за довжину повідомлення
+key_length = random.randint(1, min(10, len(message)))  # Довжина ключа від 1 до 10
+key = generate_random_key(key_length)
+
+print("Надісланий текст:", message)
+print("Згенерований ключ:", key)
+
+# Шифрування
+encrypted_message = encrypt_gronsfeld(message, key)
+print("Зашифрований текст:", encrypted_message)
+
+# Дешифрування
+decrypted_message = decrypt_gronsfeld(encrypted_message, key)
+print("Розшифрований текст:", decrypted_message)
