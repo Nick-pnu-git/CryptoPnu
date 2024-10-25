@@ -1,0 +1,111 @@
+import numpy as np
+import random
+
+
+row_key_words = ["at", "sun", "mars", "earth", "planet", "forests", "journeys", "discovers", "adventurer"]
+col_key_words = ["go", "red", "blue", "stone", "garden", "village", "festival", "mountains", "wilderness"]
+
+
+def get_sorted_indices(word):
+    # Функція повертає індекси для впорядкування букв у слові в алфавітному порядку
+    return np.argsort(list(word))
+
+
+def create_matrix(message, rows, cols):
+    # Створення матриці без пробілів
+    message_length = len(message)
+
+    # Додаємо пробіли, якщо довжина повідомлення не відповідає розміру матриці
+    if message_length < rows * cols:
+        message += ' ' * (rows * cols - message_length)
+
+    matrix = [list(message[i:i + cols]) for i in range(0, len(message), cols)]
+    return np.array(matrix)
+
+
+def encrypt(message, row_key_word, col_key_word):
+    rows, cols = len(row_key_word), len(col_key_word)
+
+    # Видаляємо пробіли з повідомлення для шифрування
+    clean_message = message.replace(' ', '')
+
+    matrix = create_matrix(clean_message, rows, cols)
+
+    # Перестановка рядків за row_key_word
+    row_indices = get_sorted_indices(row_key_word)
+    matrix = matrix[row_indices, :]
+
+    # Перестановка стовпців за col_key_word
+    col_indices = get_sorted_indices(col_key_word)
+    matrix = matrix[:, col_indices]
+
+    # Об'єднання матриці в один рядок для шифрованого тексту
+    encrypted_text = ''.join(matrix.flatten())
+    return encrypted_text
+
+
+def decrypt(encrypted_message, row_key_word, col_key_word, original_message):
+    rows, cols = len(row_key_word), len(col_key_word)
+    matrix = create_matrix(encrypted_message, rows, cols)
+
+    # Зворотня перестановка стовпців за col_key_word
+    col_indices = get_sorted_indices(col_key_word)
+    matrix = matrix[:, np.argsort(col_indices)]
+
+    # Зворотня перестановка рядків за row_key_word
+    row_indices = get_sorted_indices(row_key_word)
+    matrix = matrix[np.argsort(row_indices), :]
+
+    # Об'єднання матриці в один рядок для розшифрованого тексту
+    decrypted_text = ''.join(matrix.flatten())
+
+    # Відновлення пробілів
+    decrypted_text_with_spaces = restore_spaces(decrypted_text, original_message)
+
+    return decrypted_text_with_spaces
+
+
+def restore_spaces(decrypted_text, original_message):
+    # Відновлення пробілів у розшифрованому тексті за допомогою початкового повідомлення
+    result = []
+    decrypted_index = 0
+
+    for char in original_message:
+        if char == ' ':
+            result.append(' ')
+        else:
+            result.append(decrypted_text[decrypted_index])
+            decrypted_index += 1
+
+    return ''.join(result)
+
+
+def select_keys(message, row_key_words, col_key_words):
+    # Видаляємо пробіли з повідомлення
+    message_length = len(message.replace(' ', ''))
+
+    valid_keys = [(row_word, col_word) for row_word in row_key_words for col_word in col_key_words
+                  if len(row_word) * len(col_word) >= message_length]
+
+    if not valid_keys:
+        raise ValueError("Не вдається підібрати ключі без зайвих пробілів")
+
+    return random.choice(valid_keys)
+
+
+# Застосування
+message = "Попрощалось ясне сонце з чорною землею"
+print("Надісланий текст:", message)
+
+# Вибір ключів
+row_key_word, col_key_word = select_keys(message, row_key_words, col_key_words)
+print("Рядковий ключ:", row_key_word)
+print("Стовпцевий ключ:", col_key_word)
+
+# Шифрування
+encrypted_message = encrypt(message, row_key_word, col_key_word)
+print("Зашифрований текст:", encrypted_message)
+
+# Дешифрування
+decrypted_message = decrypt(encrypted_message, row_key_word, col_key_word, message)
+print("Розшифрований текст:", decrypted_message)
