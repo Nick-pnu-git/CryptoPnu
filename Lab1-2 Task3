@@ -1,0 +1,77 @@
+import random
+
+
+def create_alphabet():
+    # Створюємо алфавіт української мови + пробіл
+    return "абвгґдеєжзийклмнопрстуфхцчшщьюя АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ"
+
+
+def generate_homophonic_table(alphabet):
+    homophonic_table = {}
+    unique_numbers = set()  # Для унікальних тризначних чисел
+    all_numbers = [f"{num:03d}" for num in range(100, 1000)]  # Усі можливі тризначні числа
+
+    for char in alphabet:
+        # Генеруємо три унікальних тризначних числа для кожного символу
+        if len(all_numbers) < 3:
+            raise ValueError("Недостатньо тризначних чисел для генерації таблиці.")
+
+        numbers = set(random.sample(all_numbers, 3))
+        homophonic_table[char] = list(numbers)
+        # Видаляємо використані числа, щоб уникнути повторення
+        unique_numbers.update(numbers)
+        all_numbers = [num for num in all_numbers if num not in unique_numbers]
+
+    return homophonic_table
+
+
+def encrypt_homophonic(message, homophonic_table):
+    encrypted_message = []
+    for char in message:
+        if char in homophonic_table:
+            # Вибираємо випадкове число з таблиці
+            encrypted_number = random.choice(homophonic_table[char])
+            encrypted_message.append(encrypted_number)
+        else:
+            # Якщо символ не в алфавіті, додаємо його без змін
+            encrypted_message.append(char)
+    return ''.join(encrypted_message)  # Без пробілів між числами
+
+
+def decrypt_homophonic(encrypted_message, homophonic_table):
+    # Зворотня таблиця для дешифрування
+    reverse_table = {}
+    for char, numbers in homophonic_table.items():
+        for number in numbers:
+            reverse_table[number] = char
+
+    decrypted_message = []
+    # Ітеруємо через кожні 3 символи у зашифрованому повідомленні
+    i = 0
+    while i < len(encrypted_message):
+        number = encrypted_message[i:i + 3]  # Беремо три символи
+        if number in reverse_table:
+            decrypted_message.append(reverse_table[number])
+            i += 3  # Пропускаємо оброблені символи
+        else:
+            decrypted_message.append(encrypted_message[i])  # Додаємо без змін
+            i += 1  # Переходимо до наступного символу
+
+    return ''.join(decrypted_message)
+
+
+# Застосування
+message = "Попрощалось ясне сонце з чорною землею"
+alphabet = create_alphabet()
+homophonic_table = generate_homophonic_table(alphabet)
+
+print("Оригінальний текст:", message)
+print("Гомофонічна таблиця:", homophonic_table)
+
+# Шифрування
+encrypted_message = encrypt_homophonic(message, homophonic_table)
+print("Зашифрований текст:", encrypted_message)
+
+# Дешифрування
+decrypted_message = decrypt_homophonic(encrypted_message, homophonic_table)
+print("Розшифрований текст:", decrypted_message)
